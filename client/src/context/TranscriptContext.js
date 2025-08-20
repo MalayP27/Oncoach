@@ -95,7 +95,8 @@ export const TranscriptProvider = ({ children }) => {
         plan,
         isListening,
         startListening,
-        workoutEvents, // exposed to Calendar
+        workoutEvents,
+        generatePlan, // exposed to Calendar
       }}
     >
       {children}

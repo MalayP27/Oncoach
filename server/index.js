@@ -88,6 +88,39 @@ app.post("/generate-plan", async (req, res) => {
   }
 });
 
+app.post("/chat", async (req, res) => {
+  const { message, history = [] } = req.body; // history: [{role:'user'|'assistant', content:string}]
+  if (!message || !message.trim()) {
+    return res.status(400).json({ error: "No message provided" });
+  }
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "openai/gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are Oncoach, a supportive fitness and nutrition coach. Answer clearly and concisely. If the user asks for a weekly plan, you may give high-level guidance, but leave detailed plan formatting to the dedicated plan generator."
+        },
+        ...history.slice(-12), // keep recent context if you want
+        { role: "user", content: message }
+      ],
+      temperature: 0.7
+    });
+
+    if (!response.choices?.[0]) {
+      return res.status(500).json({ error: "Invalid GPT response format" });
+    }
+
+    const reply = response.choices[0].message.content;
+    res.json({ reply });
+  } catch (err) {
+    console.error("OpenRouter /chat error:", err);
+    res.status(500).json({ error: "Chat failed" });
+  }
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is listening on port ${PORT}`);
